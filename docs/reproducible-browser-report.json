@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-11-18T16:47:38.394Z",
+  "checks": [
+    "real external image feed",
+    "board persists after reload",
+    "search from board route",
+    "pixel-changing filter and undo",
+    "square crop",
+    "PNG download",
+    "separate derivative and original",
+    "320px layout",
+    "no uncaught errors"
+  ],
+  "errors": []
+}

@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-11-18T16:43:32.616Z",
+  "checks": [
+    "live API feed and loaded images",
+    "390px feed has no horizontal overflow",
+    "create board and save remote pin",
+    "IndexedDB survives reload",
+    "search from non-feed screen",
+    "filter changes actual pixels",
+    "4:5 crop pixels",
+    "text undo and redo restore pixels",
+    "draft survives internal navigation",
+    "PNG export creates a valid image",
+    "derivative is saved without replacing original",
+    "remove pin from board",
+    "no uncaught browser errors"
+  ],
+  "errors": [],
+  "videoBytes": 1132419,
+  "originalPinterest": "Login screen only; original feed introduction still required"
+}

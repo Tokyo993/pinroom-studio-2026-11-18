@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "local file upload opens editor",
+    "uploaded image persists in IndexedDB",
+    "rename board persists",
+    "320px board no horizontal overflow"
+  ],
+  "video": {
+    "width": 390,
+    "height": 900,
+    "duration": null
+  }
+}

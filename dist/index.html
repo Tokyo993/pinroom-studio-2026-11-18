@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf9f6">
+  <meta name="description" content="Pinroom — сохраняйте вдохновение и превращайте его в собственные идеи во встроенной фотостудии.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.wikimedia.org; connect-src 'self' https://commons.wikimedia.org; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>Pinroom — пространство для идей</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">К содержимому</a>
+  <header class="header">
+    <a class="brand" href="#/" aria-label="Pinroom — главная"><span class="brand-icon">p<span>·</span></span>pinroom<span class="brand-dot">®</span></a>
+    <nav class="desktop-nav" aria-label="Основная навигация"><a href="#/" data-nav="feed">Вдохновение</a><a href="#/boards" data-nav="boards">Мои доски</a></nav>
+    <form id="search-form" class="search" role="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search" aria-label="Найти идеи" placeholder="Какую идею ищем?" maxlength="150" autocomplete="off"><button type="submit" aria-label="Искать">↵</button></form>
+    <button class="create-top" data-action="upload"><span>＋</span> Создать</button>
+    <a class="avatar" href="#/boards" aria-label="Мои доски">Я</a>
+  </header>
+  <main id="main" tabindex="-1"></main>
+  <nav class="mobile-nav" aria-label="Мобильная навигация"><a href="#/" data-nav="feed"><span>⌂</span>Главная</a><button data-action="focus-search"><span>⌕</span>Поиск</button><button class="mobile-create" data-action="upload" aria-label="Создать из фотографии"><span>＋</span></button><a href="#/boards" data-nav="boards"><span>▦</span>Доски</a></nav>
+  <input type="file" id="upload" accept="image/jpeg,image/png,image/webp" hidden>
+  <dialog id="dialog" aria-labelledby="dialog-title"></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <footer class="footer"><span>Место, где идеи обретают форму.</span><button data-action="about">О проекте и приватности ↗</button></footer>
+</body>
+</html>
