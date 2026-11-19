@@ -6,3 +6,12 @@
 @media(max-width:360px){.header{padding:15px 14px;gap:10px}.brand{font-size:1.1rem}main{padding-left:12px;padding-right:12px}.feed-tools{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}.chip{font-size:.8rem;padding:10px 13px}.masonry{column-gap:10px}.mobile-nav{padding-left:4px;padding-right:4px}.mobile-nav>a,.mobile-nav>button{min-width:49px;font-size:.65rem}.mobile-nav .mobile-create{min-width:38px;width:38px;height:38px;min-height:38px;margin:0 2px}.board-cover{height:133px}.board-label h3{font-size:.8rem}.board-header{flex-wrap:wrap}.board-header>div{flex:1}.board-header h1{font-size:1.35rem}.new-collection{min-height:198px}.new-collection strong{font-size:.8rem}.editor-buttons{gap:4px}.editor-buttons .btn{padding:9px 11px}.canvas-frame canvas{max-height:365px}.edit-tabs{gap:5px}.edit-tabs button{font-size:.7rem}.ratio-grid button{font-size:.65rem}.filter-grid button{font-size:.65rem}.tool-row button{font-size:.75rem}.detail h1{font-size:1.15rem}.source-pill{font-size:.65rem}.credit{font-size:.75rem}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .pin-picture img{opacity:0;transition:opacity .25s,transform .4s}.pin-picture img.is-loaded{opacity:1}.pin-picture:has(img:not(.is-loaded)){background:linear-gradient(145deg,#292132,#17121e)}
+
+/* Account dialogs share the studio's dark violet palette. */
+.avatar.signed-in{outline:2px solid #b18af0;outline-offset:3px}
+.auth-symbol,.account-avatar{display:grid;place-items:center;width:56px;height:56px;border-radius:18px;background:#322344;color:#c9a4ff;font-size:24px;margin:12px 0 20px}
+.auth-symbol svg{width:25px;height:25px}.account-signin,.account-wide{width:100%;margin-top:12px;justify-content:center;text-align:center}
+.auth-note{font-size:14px;line-height:1.6;color:var(--muted);margin:18px 0 0}
+.account-person{display:flex;align-items:center;gap:14px;margin:16px 0 22px}.account-person>div{min-width:0}.account-person strong,.account-person p{overflow-wrap:anywhere}.account-person p{color:var(--muted);font-size:14px;margin:5px 0 0}.account-avatar{flex:none;margin:0}
+.account-stats{display:flex;gap:28px;margin:22px 0;color:var(--muted)}.account-stats strong{display:block;color:var(--text);font-size:24px;margin-bottom:4px}
+.import-choice{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.5;margin:20px 0}.import-choice input{width:18px;height:18px;flex:none;accent-color:#a678e8}

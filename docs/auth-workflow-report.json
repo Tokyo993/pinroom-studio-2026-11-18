@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-11-19T15:46:59.674Z",
+  "originalIntro": false,
+  "checks": [
+    "local sign-in succeeds",
+    "live API feed and loaded images",
+    "390px feed has no horizontal overflow",
+    "create board and save remote pin",
+    "D1 collections survive reload",
+    "search from non-feed screen",
+    "filter changes actual pixels",
+    "4:5 crop pixels",
+    "text undo and redo restore pixels",
+    "draft survives internal navigation",
+    "PNG export creates a valid image",
+    "derivative is saved without replacing original",
+    "remove pin from board",
+    "logout blocks private library",
+    "no uncaught browser errors"
+  ],
+  "errors": [],
+  "videoBytes": 1299580
+}

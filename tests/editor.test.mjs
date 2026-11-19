@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { initialEdit, sanitizeEdit, cropRect, outputSize, canvasFilter, createHistory } from '../dist/editor-core.js';
+import { initialEdit, sanitizeEdit, cropRect, outputSize, canvasFilter, createHistory } from '../public/editor-core.js';
 
 test('defaults are independent, complete, and preserved by sanitization', () => {
   assert.deepEqual(sanitizeEdit(), initialEdit());

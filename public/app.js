@@ -1,11 +1,12 @@
 import {searchPins,safeImageUrl,safeSourceUrl} from './api.js';
-import {readLibrary,writeLibrary,boardName,addToBoard,removeFromBoard} from './storage.js';
+import {readLibrary,writeLibrary,getSession,readLegacyLibrary,clearLegacyLibrary,boardName,addToBoard,removeFromBoard} from './storage.js';
 import {initialEdit,sanitizeEdit,cropRect,outputSize,canvasFilter,createHistory} from './editor-core.js';
 import {icon} from './icons.js';
 
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const categories=[['Для вас','incategory:"Featured pictures on Wikimedia Commons" landscape'],['Природа','incategory:"Featured pictures on Wikimedia Commons" mountains'],['Архитектура','incategory:"Featured pictures on Wikimedia Commons" architecture'],['Интерьеры','interior design'],['Цветы','incategory:"Featured pictures on Wikimedia Commons" flowers'],['Путешествия','incategory:"Featured pictures on Wikimedia Commons" Italy'],['Искусство','abstract painting']];
+let accountSession={authenticated:false,user:null};
 let library={boards:[],pins:{}},storageError='',feed=[],query=categories[0][1],category='Для вас',nextOffset=null,loading=false,feedError='',request=null,viewToken=0;
 let editor=null,editTab='crop',pendingPin=null,toastTimer,saveBusy=false,searchOpen=false;
 const transient=new Map();
@@ -13,7 +14,7 @@ const drafts=new Map();
 const allPins=()=>new Map([...feed.map(p=>[p.id,p]),...Object.entries(library.pins),...transient]);
 const findPin=id=>allPins().get(id);
 const isSaved=id=>library.boards.some(b=>b.pins.includes(id));
-const imageUrl=p=>p?.local&&/^data:image\/(png|jpeg|webp);base64,/.test(p.image)?p.image:safeImageUrl(p?.image);
+const imageUrl=p=>p?.local&&(/^data:image\/(png|jpeg|webp);base64,/.test(p.image)||/^\/api\/assets\/[a-f0-9-]{36}$/.test(p.image))?p.image:safeImageUrl(p?.image);
 const route=()=>location.hash.slice(1)||'/';
 function toast(message){$('#toast').textContent=message;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),4000);}
 function setTitle(text){document.title=`${text} · PinStudio`;}
@@ -42,7 +43,8 @@ async function loadFeed(append=false){
 }
 function renderBoards(){
   setTitle('Коллекции');
-  return `<section class="board-header"><div><h1>Коллекции</h1><p>Твои идеи, собранные вместе.</p></div><button class="icon-button add-board" data-action="new-board" aria-label="Новая коллекция">${icon('plus')}</button></section>${storageError?`<p class="error-banner">${esc(storageError)}</p>`:''}<div class="board-grid">${library.boards.map(b=>{const pins=b.pins.map(id=>library.pins[id]).filter(Boolean).slice(0,3);return `<a class="board-card" href="#/board/${encodeURIComponent(b.id)}"><div class="board-cover ${pins.length?'':'blank'} ${pins.length===1?'single':''}">${pins.length?pins.map(p=>`<img src="${esc(imageUrl(p))}" alt="" loading="lazy">`).join(''):`<span>${icon('collections')}</span>`}</div><div class="board-label"><h3>${esc(b.name)}</h3><span class="collection-dot">${icon('collections')}</span><p>${b.pins.length} пинов</p></div></a>`;}).join('')}<button class="board-card new-collection" data-action="new-board"><span>${icon('plus')}</span><strong>Новая коллекция</strong><small>Собери что-то своё</small></button></div><p class="local-note">${icon('lock')} Коллекции хранятся только в этом браузере.</p>`;
+  if(!accountSession.authenticated)return empty('Твои личные коллекции','Войди, чтобы сохранять идеи и открывать свои коллекции на других устройствах.',`<button class="btn" data-action="account">${icon('user')} Войти в аккаунт</button>`);
+  return `<section class="board-header"><div><h1>Коллекции</h1><p>Твои идеи, собранные вместе.</p></div><button class="icon-button add-board" data-action="new-board" aria-label="Новая коллекция">${icon('plus')}</button></section>${storageError?`<p class="error-banner">${esc(storageError)}</p>`:''}<div class="board-grid">${library.boards.map(b=>{const pins=b.pins.map(id=>library.pins[id]).filter(Boolean).slice(0,3);return `<a class="board-card" href="#/board/${encodeURIComponent(b.id)}"><div class="board-cover ${pins.length?'':'blank'} ${pins.length===1?'single':''}">${pins.length?pins.map(p=>`<img src="${esc(imageUrl(p))}" alt="" loading="lazy">`).join(''):`<span>${icon('collections')}</span>`}</div><div class="board-label"><h3>${esc(b.name)}</h3><span class="collection-dot">${icon('collections')}</span><p>${b.pins.length} пинов</p></div></a>`;}).join('')}<button class="board-card new-collection" data-action="new-board"><span>${icon('plus')}</span><strong>Новая коллекция</strong><small>Собери что-то своё</small></button></div><p class="local-note">${icon('lock')} Коллекции доступны только в вашем аккаунте.</p>`;
 }
 function renderBoard(id){
   const board=library.boards.find(b=>b.id===id);if(!board)return empty('Коллекция не найдена','Возможно, она была удалена.', '<a class="btn" href="#/boards">К коллекциям</a>');
@@ -96,7 +98,7 @@ function exportCanvas(){
   const ctx=out.getContext('2d');ctx.fillStyle='#faf9f6';ctx.fillRect(0,0,out.width,out.height);ctx.drawImage(source,0,0);ctx.fillStyle='#45483f';ctx.font=`${fontSize}px Arial`;lines.forEach((line,i)=>ctx.fillText(line,12,source.height+fontSize*(1.5+i*1.4),out.width-24));return out;
 }
 function download(data,name){const a=document.createElement('a');a.href=data;a.download=name;document.body.append(a);a.click();a.remove();}
-async function saveEdited(){if(!editor?.ready)return;try{const canvas=exportCanvas();const pin={...editor.pin,id:`local-${crypto.randomUUID()}`,originalId:editor.pin.originalId||editor.pin.id,title:`${editor.pin.title} — моя версия`,image:canvas.toDataURL('image/png'),width:canvas.width,height:canvas.height,local:true,edited:true,author:editor.pin.author||'Вы',createdAt:Date.now()};transient.set(pin.id,pin);showSave(pin);}catch{toast('Не удалось экспортировать изображение. Попробуйте другое фото.');}}
+async function saveEdited(){if(!editor?.ready)return;try{const canvas=exportCanvas();const pin={...editor.pin,id:`local-${crypto.randomUUID()}`,originalId:editor.pin.originalId||editor.pin.id,title:`${editor.pin.title} — моя версия`.slice(0,240),image:canvas.toDataURL('image/png'),width:canvas.width,height:canvas.height,local:true,edited:true,author:editor.pin.author||'Вы',createdAt:Date.now()};transient.set(pin.id,pin);showSave(pin);}catch{toast('Не удалось экспортировать изображение. Попробуйте другое фото.');}}
 function dialog(content){const d=$('#dialog');d.innerHTML=content;if(!d.open)d.showModal();}
 const dialogTop=title=>`<div class="dialog-top"><h2 id="dialog-title">${esc(title)}</h2><button class="dialog-close" data-action="close-dialog" aria-label="Закрыть">${icon('close')}</button></div>`;
 function boardForm(label='Новая коллекция',value=''){return `<form id="board-form"><label for="board-name">${label}</label><input id="board-name" name="name" maxlength="60" required placeholder="Например, Тихое утро" value="${esc(value)}"><button type="submit" class="btn">${value?'Сохранить название':'Создать коллекцию'}</button><p class="dialog-error" role="alert"></p></form>`;}
@@ -105,7 +107,7 @@ function showSave(pin){
   pendingPin=pin;
   dialog(dialogTop('Сохранить в коллекцию')+`<p class="dialog-copy">${esc(pin.title)}</p><div class="dialog-scroll">${library.boards.map(b=>`<button class="board-option" data-action="choose-board" data-board="${esc(b.id)}"><span class="board-icon">${icon('collections')}</span><span><strong>${esc(b.name)}</strong><small>${b.pins.length} пинов${b.pins.includes(pin.id)?' · уже сохранён':''}</small></span><span class="board-status">${b.pins.includes(pin.id)?icon('check'):icon('plus')}</span></button>`).join('')}</div>`+boardForm('Или создайте новую коллекцию'));
 }
-async function persist(next){await writeLibrary(next);library=next;}
+async function persist(next){library=await writeLibrary(next);}
 async function chooseBoard(id){if(saveBusy||!pendingPin)return;saveBusy=true;try{const pin=pendingPin;await persist(addToBoard(library,id,pin));$('#dialog').close();pendingPin=null;toast(`Сохранено: ${library.boards.find(b=>b.id===id).name}`);if(!route().startsWith('/edit/'))render();else updateSaveButtons();}catch(e){toast(e.message);}finally{saveBusy=false;}}
 function updateSaveButtons(){document.querySelectorAll('.pin-save').forEach(b=>{const saved=isSaved(b.dataset.id);b.classList.toggle('saved',saved);b.innerHTML=icon('bookmark');b.setAttribute('aria-pressed',saved);});}
 async function render(){
@@ -121,31 +123,61 @@ async function render(){
       try{const response=await fetch(`https://commons.wikimedia.org/w/api.php?action=query&pageids=${id}&prop=imageinfo&iiprop=url%7Cextmetadata%7Csize&iiurlwidth=1000&format=json&origin=*`,{signal:AbortSignal.timeout(18000),credentials:'omit'});if(!response.ok)throw new Error();const data=await response.json();const {normalizePage}=await import('./api.js');pin=normalizePage(data.query?.pages?.[id]);if(pin)transient.set(id,pin);}catch{}
       if(token!==viewToken)return;
     }
-    if(!pin)$('#main').innerHTML=empty('Пин недоступен','Он не сохранён в этом браузере или источник временно не отвечает.','<a href="#/" class="btn">Вернуться к ленте</a>');
+    if(!pin)$('#main').innerHTML=empty('Пин недоступен','Войдите в нужный аккаунт или повторите попытку позже.','<a href="#/" class="btn">Вернуться к ленте</a>');
     else if(type==='pin')$('#main').innerHTML=renderPin(pin);else await renderEditor(pin,token);
   }else{setTitle('Вдохновение');$('#main').innerHTML=feedMarkup();if(!feed.length&&!loading&&!feedError)loadFeed();}
 }
 async function upload(file){
   if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)){toast('Подойдут JPG, PNG и WebP.');return;}if(file.size>15*1024*1024){toast('Выберите изображение до 15 МБ.');return;}
   toast('Открываем фотографию…');const objectUrl=URL.createObjectURL(file);
-  try{const img=await loadImage(objectUrl);const {width,height}=outputSize(img.naturalWidth,img.naturalHeight,0);const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;canvas.getContext('2d').drawImage(img,0,0,width,height);const pin={id:`local-${crypto.randomUUID()}`,title:file.name.replace(/\.[^.]+$/,''),author:'Вы',license:'Личное изображение',source:'',image:canvas.toDataURL('image/png'),width,height,local:true};transient.set(pin.id,pin);location.hash=`/edit/${pin.id}`;}catch{toast('Этот файл не удалось прочитать как изображение.');}finally{URL.revokeObjectURL(objectUrl);$('#upload').value='';}
+  try{const img=await loadImage(objectUrl);const {width,height}=outputSize(img.naturalWidth,img.naturalHeight,0);const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;canvas.getContext('2d').drawImage(img,0,0,width,height);const pin={id:`local-${crypto.randomUUID()}`,title:file.name.replace(/\.[^.]+$/,'').slice(0,240),author:'Вы',license:'Личное изображение',source:'',image:canvas.toDataURL('image/png'),width,height,local:true};transient.set(pin.id,pin);location.hash=`/edit/${pin.id}`;}catch{toast('Этот файл не удалось прочитать как изображение.');}finally{URL.revokeObjectURL(objectUrl);$('#upload').value='';}
 }
+
+function clearAccountMemory(){accountSession={authenticated:false,user:null};library={boards:[],pins:{}};pendingPin=null;editor=null;transient.clear();drafts.clear();updateAccountIndicator();}
+function updateAccountIndicator(){const avatar=$('.avatar');if(!avatar)return;avatar.classList.toggle('signed-in',accountSession.authenticated);avatar.title=accountSession.authenticated?accountSession.user.displayName:'Войти в аккаунт';avatar.setAttribute('aria-label',accountSession.authenticated?'Мой профиль':'Войти в аккаунт');}
+async function syncAccount(){const fresh=await getSession();if(accountSession.user?.id!==fresh.user?.id){clearAccountMemory();}accountSession=fresh;library=await readLibrary();storageError='';updateAccountIndicator();}
+async function showAccount(){
+  try{await syncAccount();}catch(error){dialog(dialogTop('Не удалось открыть профиль')+`<p class="dialog-copy">${esc(error.message)}</p><button class="btn" data-action="account">Повторить</button>`);return;}
+  if(!accountSession.authenticated){
+    dialog(dialogTop('Войти в PinStudio')+`<div class="auth-symbol">${icon('lock')}</div><p class="dialog-copy">Сохраняй идеи в личные коллекции и продолжай работу на другом устройстве.</p><a class="btn account-signin" href="/signin-with-chatgpt?return_to=%2F" target="_top">${icon('user')} Войти через ChatGPT</a><p class="auth-note">Доступ к коллекциям получает только владелец аккаунта.${route().startsWith('/edit/')?' Перед входом скачайте несохранённый результат в PNG.':''}</p>`);return;
+  }
+  const legacy=await readLegacyLibrary().catch(()=>null);
+  dialog(dialogTop('Мой профиль')+`<div class="account-person"><span class="account-avatar">${esc((accountSession.user.displayName||'Я')[0])}</span><div><strong>${esc(accountSession.user.displayName)}</strong><p>${esc(accountSession.user.email)}</p></div></div><p class="dialog-copy">${icon('lock')} Личные коллекции доступны только вам.</p><div class="account-stats"><span><strong>${library.boards.length}</strong> коллекций</span><span><strong>${Object.keys(library.pins).length}</strong> пинов</span></div><button class="btn secondary account-wide" data-action="refresh-account">Обновить коллекции</button>${legacy?.boards?.length?'<button class="btn secondary account-wide" data-action="import-legacy">Импортировать старые коллекции</button>':''}<a class="btn ghost account-wide" data-action="sign-out" href="/signout-with-chatgpt?return_to=%2F" target="_top">Выйти из аккаунта</a>`);
+}
+async function confirmImport(){
+  const legacy=await readLegacyLibrary();if(!legacy?.boards?.length){toast('Локальные коллекции не найдены');return;}
+  dialog(dialogTop('Перенести коллекции')+`<p class="dialog-copy">В этом профиле браузера остались коллекции старой версии: ${legacy.boards.length}. Импортируйте их только если это ваши данные. Они будут сохранены в аккаунте ${esc(accountSession.user.email)}.</p><label class="import-choice"><input id="remove-legacy" type="checkbox" checked> Удалить локальную копию после успешного импорта</label><button class="btn account-wide" data-action="confirm-import">Импортировать в мой аккаунт</button>`);
+}
+async function importLegacy(){
+  if(saveBusy)return;saveBusy=true;const button=$('[data-action="confirm-import"]');button.disabled=true;
+  try{const legacy=await readLegacyLibrary();if(!legacy?.boards)throw new Error('Локальные коллекции не найдены.');const remove=$('#remove-legacy').checked;const next=structuredClone(library),ids=new Map();
+    for(const [id,pin] of Object.entries(legacy.pins||{})){const newId=`local-${crypto.randomUUID()}`;ids.set(id,newId);next.pins[newId]={...pin,id:newId,originalId:pin.originalId||pin.id,title:String(pin.title||'Без названия').slice(0,240)};}
+    for(const board of legacy.boards)next.boards.push({id:crypto.randomUUID(),name:boardName(board.name),createdAt:Date.now(),pins:[...new Set((board.pins||[]).map(id=>ids.get(id)).filter(Boolean))]});
+    await persist(next);if(remove)await clearLegacyLibrary();$('#dialog').close();render();toast('Коллекции перенесены в ваш аккаунт');
+  }catch(error){toast(error.message);}finally{saveBusy=false;button.disabled=false;}
+}
+
 document.addEventListener('click',async event=>{
   if(event.target.closest('.skip')){event.preventDefault();$('#main').focus();return;}
   if(event.target.closest('[data-nav="feed"],.brand')){event.preventDefault();searchOpen=false;query=categories[0][1];category=categories[0][0];$('#search').value='';if(route()!=='/')location.hash='/';else{nav();$('#main').innerHTML=feedMarkup();}loadFeed();return;}
   const button=event.target.closest('[data-action]');if(!button||button.disabled)return;
   const {action,id,board,value}=button.dataset;
   try{
-    if(action==='upload')$('#upload').click();
+    if(action==='upload'){if(!accountSession.authenticated){await showAccount();return;}$('#upload').click();}
+    else if(action==='account')await showAccount();
+    else if(action==='sign-out'){clearAccountMemory();}
+    else if(action==='refresh-account'){await syncAccount();$('#dialog').close();render();toast('Коллекции обновлены');}
+    else if(action==='import-legacy')await confirmImport();
+    else if(action==='confirm-import')await importLegacy();
     else if(action==='focus-search'){searchOpen=true;if(route()!=='/')location.hash='/';nav();$('#search').scrollIntoView({block:'center'});$('#search').focus();}
     else if(action==='clear-search'){$('#search').value='';$('#search').focus();}
     else if(action==='category'){searchOpen=false;nav();query=button.dataset.query;category=button.dataset.label;$('#search').value='';if(route()!=='/')location.hash='/';else $('#main').innerHTML=feedMarkup();loadFeed();}
     else if(action==='retry')loadFeed(false);
     else if(action==='more')loadFeed(true);
-    else if(action==='save'){const pin=findPin(id);if(pin)showSave(pin);}
+    else if(action==='save'){if(!accountSession.authenticated){await showAccount();return;}const pin=findPin(id);if(pin)showSave(pin);}
     else if(action==='choose-board')await chooseBoard(board);
     else if(action==='close-dialog'){$('#dialog').close();pendingPin=null;}
-    else if(action==='new-board'){pendingPin=null;dialog(dialogTop('Новая коллекция')+boardForm());}
+    else if(action==='new-board'){if(!accountSession.authenticated){await showAccount();return;}pendingPin=null;dialog(dialogTop('Новая коллекция')+boardForm());}
     else if(action==='rename-board'){pendingPin=null;dialog(dialogTop('Название коллекции')+boardForm('Название',library.boards.find(b=>b.id===board).name));$('#board-form').dataset.rename=board;}
     else if(action==='remove'){if(saveBusy)return;saveBusy=true;try{await persist(removeFromBoard(library,board,id));render();toast('Пин убран с доски');}finally{saveBusy=false;}}
     else if(action==='edit-tab'){editTab=value;refreshPanel();}
@@ -155,10 +187,10 @@ document.addEventListener('click',async event=>{
     else if(action==='flip'){commitEdit({flip:!editor.state.flip});refreshPanel();}
     else if(action==='undo'||action==='redo'){editor.state=editor.history[action]();draw();refreshPanel();}
     else if(action==='reset'){commitEdit(initialEdit());refreshPanel();}
-    else if(action==='save-edit')await saveEdited();
+    else if(action==='save-edit'){if(!accountSession.authenticated){await showAccount();return;}await saveEdited();}
     else if(action==='export'){download(exportCanvas().toDataURL('image/png'),'pinroom-studio.png');toast('PNG подготовлен для скачивания');}
     else if(action==='retry-editor')render();
-    else if(action==='about'){dialog(dialogTop('Пространство для идей')+'<p class="dialog-copy">PinStudio — учебная интерпретация сценариев Pinterest со встроенной фотостудией. Проект не связан с Pinterest или Adobe.</p><p class="dialog-copy">Изображения ленты поступают из Wikimedia Commons. Сохраняются авторство, источник и лицензия. Поисковый запрос и IP-адрес видны Wikimedia при обращении к API.</p><p class="dialog-copy">Доски, загруженные фото и результаты редактирования хранятся в IndexedDB только в этом браузере. Они не отправляются на сервер. Это не зашифрованное хранилище: другие пользователи этого профиля браузера могут получить доступ. Очистка данных сайта удалит коллекцию. Скачивайте важные работы в PNG.</p><p class="dialog-copy">Пять экранов · API · локальные доски · фотостудия. Нет аккаунтов, облачной синхронизации и совместных досок.</p>');}
+    else if(action==='about'){dialog(dialogTop('Пространство для идей')+'<p class="dialog-copy">PinStudio — учебная интерпретация сценариев Pinterest со встроенной фотостудией. Проект не связан с Pinterest или Adobe.</p><p class="dialog-copy">Изображения ленты поступают из Wikimedia Commons. Сохраняются авторство, источник и лицензия. Поисковый запрос и IP-адрес видны Wikimedia при обращении к API.</p><p class="dialog-copy">Вход выполняется через ChatGPT. Коллекции и сохранённые изображения находятся в закрытом серверном хранилище. Сервер проверяет владельца при каждом чтении и изменении. Несохранённые изменения редактора остаются в памяти вкладки. На общем устройстве выходите из аккаунта после работы.</p><p class="dialog-copy">Пять экранов · внешний API · личные коллекции · фотостудия. Коллекции синхронизируются при открытии и сохранении; автоматическое совместное редактирование не поддерживается.</p>');}
   }catch(error){toast(error.message||'Не получилось выполнить действие. Попробуйте снова.');}
 });
 document.addEventListener('submit',async event=>{
@@ -184,5 +216,6 @@ window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);});
 window.addEventListener('beforeunload',event=>{if(editor?.history.canUndo){event.preventDefault();event.returnValue='';}});
 $('#dialog').addEventListener('click',event=>{if(event.target===$('#dialog')){const rect=$('#dialog').getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)$('#dialog').close();}});
 document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));
-try{library=await readLibrary();}catch(error){storageError=error.message;toast(storageError);}
+window.addEventListener('auth-expired',event=>{clearAccountMemory();render();toast(event.detail?.message||'Сессия завершена. Войдите снова.');});
+try{await syncAccount();}catch(error){storageError=error.message;toast(storageError);}
 render();

@@ -21,10 +21,10 @@
     <form id="search-form" class="search" role="search"><span data-icon="search"></span><input id="search" aria-label="Найти идеи" placeholder="Найди своё вдохновение" maxlength="150" autocomplete="off"><button type="button" data-action="clear-search" aria-label="Очистить поиск"><span data-icon="close"></span></button><button class="search-submit" type="submit" aria-label="Искать"><span data-icon="search"></span></button></form>
     <button class="create-top" data-action="upload"><span data-icon="plus"></span><span>Создать</span></button>
     <button class="header-search icon-button" data-action="focus-search" aria-label="Поиск"><span data-icon="search"></span></button>
-    <a class="avatar" href="#/boards" aria-label="Мои коллекции"><span data-icon="user"></span></a>
+    <button class="avatar" data-action="account" aria-label="Войти в аккаунт"><span data-icon="user"></span></button>
   </header>
   <main id="main" tabindex="-1"></main>
-  <nav class="mobile-nav" aria-label="Мобильная навигация"><a href="#/" data-nav="feed"><span data-icon="home"></span><span>Лента</span></a><button data-action="focus-search" data-nav="search"><span data-icon="search"></span><span>Поиск</span></button><button class="mobile-create" data-action="upload" aria-label="Создать из фотографии"><span data-icon="plus"></span></button><a href="#/boards" data-nav="boards"><span data-icon="collections"></span><span>Коллекции</span></a><button data-action="about"><span data-icon="info"></span><span>О проекте</span></button></nav>
+  <nav class="mobile-nav" aria-label="Мобильная навигация"><a href="#/" data-nav="feed"><span data-icon="home"></span><span>Лента</span></a><button data-action="focus-search" data-nav="search"><span data-icon="search"></span><span>Поиск</span></button><button class="mobile-create" data-action="upload" aria-label="Создать из фотографии"><span data-icon="plus"></span></button><a href="#/boards" data-nav="boards"><span data-icon="collections"></span><span>Коллекции</span></a><button data-action="account"><span data-icon="user"></span><span>Профиль</span></button></nav>
   <input type="file" id="upload" accept="image/jpeg,image/png,image/webp" hidden>
   <dialog id="dialog" aria-labelledby="dialog-title"></dialog>
   <div id="toast" role="status" aria-live="polite"></div>

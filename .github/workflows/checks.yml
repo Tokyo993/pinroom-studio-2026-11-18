@@ -1,4 +1,4 @@
-name: Verify Pinroom
+name: Verify PinStudio
 on: [push, pull_request]
 permissions:
   contents: read
@@ -12,3 +12,5 @@ jobs:
           node-version: '24'
       - run: npm run check
       - run: npm test
+      - run: npm ci
+      - run: npm run build

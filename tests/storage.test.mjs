@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {boardName,addToBoard,removeFromBoard} from '../dist/storage.js';
+import {boardName,addToBoard,removeFromBoard} from '../public/storage.js';
 const library=()=>({boards:[{id:'a',name:'A',pins:[]},{id:'b',name:'B',pins:[]}],pins:{}});
 test('board names trim whitespace and reject empty or oversized input',()=>{assert.equal(boardName('  My   ideas  '),'My ideas');assert.throws(()=>boardName(' '));assert.throws(()=>boardName('x'.repeat(61)));});
 test('saving is idempotent and leaves original state unchanged',()=>{const before=library();const after=addToBoard(addToBoard(before,'a',{id:'1',title:'Test'}),'a',{id:'1',title:'Test'});assert.deepEqual(after.boards[0].pins,['1']);assert.deepEqual(before,library());});

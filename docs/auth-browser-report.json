@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-11-19T15:41:55.560Z",
+  "checks": [
+    "guest denied and local sign-in succeeds",
+    "real external image feed",
+    "board persists after reload",
+    "search from board route",
+    "pixel-changing filter and undo",
+    "square crop",
+    "PNG download",
+    "separate derivative and original",
+    "private R2 image displays for owner",
+    "320px layout",
+    "logout denies private library and image access",
+    "no uncaught errors"
+  ],
+  "errors": []
+}

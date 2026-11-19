@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizePage, plainText, safeImageUrl, safeSourceUrl, searchPins } from '../dist/api.js';
+import { normalizePage, plainText, safeImageUrl, safeSourceUrl, searchPins } from '../public/api.js';
 
 function page(id = 101, overrides = {}) {
   return { pageid: id, title: 'File:Mountain_view.jpg', index: 1, imageinfo: [{
