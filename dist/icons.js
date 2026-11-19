@@ -1,0 +1,28 @@
+const paths={
+ home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+ search:'<circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/>',
+ plus:'<path d="M12 4v16M4 12h16"/>',
+ bookmark:'<path d="M6 3h12v18l-6-4-6 4z"/>',
+ collections:'<rect x="3" y="5" width="14" height="16" rx="2"/><path d="M7 2h12a2 2 0 0 1 2 2v13M8 5v10l3-2 3 2V5"/>',
+ info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',
+ back:'<path d="m14 5-7 7 7 7"/>',
+ close:'<path d="m6 6 12 12M6 18 18 6"/>',
+ edit:'<path d="m4 20 11-11 4 4L8 24M14 4V1M12 3h4M21 6V3M19 4.5h4M6 9V5M4 7h4" transform="translate(0 -2)"/>',
+ crop:'<path d="M6 2v14a2 2 0 0 0 2 2h14M2 6h14a2 2 0 0 1 2 2v14"/>',
+ adjust:'<path d="M3 6h6m4 0h8M9 3v6M3 12h12m4 0h2m-6-3v6M3 18h4m4 0h10M7 15v6"/>',
+ filters:'<circle cx="12" cy="7" r="5"/><circle cx="7" cy="15" r="5"/><circle cx="17" cy="15" r="5"/>',
+ text:'<path d="M4 5V3h16v2M12 3v18M8 21h8"/>',
+ undo:'<path d="m7 4-5 5 5 5M3 9h11a6 6 0 0 1 0 12h-4"/>',
+ redo:'<path d="m17 4 5 5-5 5M21 9H10a6 6 0 0 0 0 12h4"/>',
+ download:'<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',
+ compare:'<circle cx="12" cy="12" r="9"/><path d="M12 3v18"/>',
+ rotate:'<path d="M4 7V2m0 5h5M4 7a9 9 0 1 1-1 9"/>',
+ flip:'<path d="M12 2v20M3 17h5V7zm18 0h-5V7z"/>',
+ check:'<path d="m5 12 4 4L19 6"/>',
+ external:'<path d="M14 3h7v7m0-7L10 14M10 3H3v18h18v-7"/>',
+ lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4M12 14v3"/>',
+ image:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 6-6 5 5 3-3 4 4"/>',
+ more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>'
+};
+export function icon(name){return `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.image}</svg>`;}

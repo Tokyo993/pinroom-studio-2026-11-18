@@ -14,14 +14,14 @@ try{
   await page.locator('.pin-save').first().click();await page.locator('#board-name').fill('Browser QA');await page.locator('#board-form button').click();await page.locator('#dialog').waitFor({state:'hidden'});
   await page.locator('.mobile-nav [data-nav="boards"]').click();await page.locator('.board-card').filter({hasText:'Browser QA'}).click();
   await page.reload();await page.locator('.pin-card').waitFor();assert.equal(await page.locator('.pin-card').count(),1);checks.push('board persists after reload');
-  await page.locator('#search').fill('sunflower');await page.locator('#search').press('Enter');await page.locator('.pin-card').first().waitFor({timeout:25000});assert.match(await page.locator('h1').innerText(),/sunflower/);checks.push('search from board route');
+  await page.locator('.mobile-nav [data-action="focus-search"]').click();await page.locator('#search').fill('sunflower');await page.locator('#search').press('Enter');await page.locator('.pin-card').first().waitFor({timeout:25000});assert.match(await page.locator('h1').innerText(),/sunflower/);checks.push('search from board route');
   await page.goto(base+'/#/edit/'+id);await page.locator('[data-action="export"]:enabled').waitFor({timeout:25000});
-  const original=await page.locator('#canvas').evaluate(c=>c.toDataURL());await page.locator('[data-action="filter"][data-value="mono"]').click();
+  const original=await page.locator('#canvas').evaluate(c=>c.toDataURL());await page.locator('[data-action="edit-tab"][data-value="filters"]').click();await page.locator('[data-action="filter"][data-value="mono"]').click();
   const edited=await page.locator('#canvas').evaluate(c=>c.toDataURL());assert.notEqual(edited,original);await page.locator('[data-action="undo"]').click();assert.equal(await page.locator('#canvas').evaluate(c=>c.toDataURL()),original);checks.push('pixel-changing filter and undo');
-  await page.locator('[data-action="edit-tab"][data-value="crop"]').click();await page.locator('#edit-ratio').selectOption('1:1');const dims=await page.locator('#canvas').evaluate(c=>[c.width,c.height]);assert.equal(dims[0],dims[1]);checks.push('square crop');
+  await page.locator('[data-action="edit-tab"][data-value="crop"]').click();await page.locator('[data-action="ratio"][data-value="1:1"]').click();const dims=await page.locator('#canvas').evaluate(c=>[c.width,c.height]);assert.equal(dims[0],dims[1]);checks.push('square crop');
   const downloadEvent=page.waitForEvent('download');await page.locator('[data-action="export"]').click();const download=await downloadEvent;assert.equal(await download.failure(),null);checks.push('PNG download');
   await page.locator('[data-action="save-edit"]').click();await page.locator('.board-option').filter({hasText:'Browser QA'}).click();await page.locator('#dialog').waitFor({state:'hidden'});
-  await page.locator('.mobile-nav [data-nav="boards"]').click();await page.locator('.board-card').filter({hasText:'Browser QA'}).click();assert.equal(await page.locator('.pin-card').count(),2);checks.push('separate derivative and original');
+  await page.locator('.editor-heading a').click();await page.locator('.mobile-nav [data-nav="boards"]').click();await page.locator('.board-card').filter({hasText:'Browser QA'}).click();assert.equal(await page.locator('.pin-card').count(),2);checks.push('separate derivative and original');
   await page.setViewportSize({width:320,height:740});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks.push('320px layout');
   assert.deepEqual(errors,[]);checks.push('no uncaught errors');
   await mkdir('work',{recursive:true});await writeFile('work/browser-report.json',JSON.stringify({checkedAt:new Date().toISOString(),checks,errors},null,2));
