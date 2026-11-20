@@ -4,7 +4,7 @@ const FILTERS = new Set(['none', 'warm', 'cool', 'mono', 'sepia']);
 
 export function initialEdit() {
   return {
-    rotation: 0, flip: false, ratio: 'original', zoom: 1,
+    outputEdge: 1600, rotation: 0, flip: false, ratio: 'original', zoom: 1,
     panX: 50, panY: 50, brightness: 100, contrast: 100, saturation: 100,
     filter: 'none', text: '', textX: 50, textY: 75, textSize: 9, textColor: '#ffffff',
   };
@@ -29,6 +29,7 @@ function quarterTurn(value) {
 export function sanitizeEdit(input = {}) {
   const state = input && typeof input === 'object' ? input : {};
   return {
+    outputEdge: [640,1080,1600].includes(Number(state.outputEdge)) ? Number(state.outputEdge) : 1600,
     rotation: quarterTurn(state.rotation),
     flip: state.flip === true,
     ratio: RATIOS.has(state.ratio) ? state.ratio : 'original',

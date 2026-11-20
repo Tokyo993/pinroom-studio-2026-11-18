@@ -15,3 +15,5 @@
 .account-person{display:flex;align-items:center;gap:14px;margin:16px 0 22px}.account-person>div{min-width:0}.account-person strong,.account-person p{overflow-wrap:anywhere}.account-person p{color:var(--muted);font-size:14px;margin:5px 0 0}.account-avatar{flex:none;margin:0}
 .account-stats{display:flex;gap:28px;margin:22px 0;color:var(--muted)}.account-stats strong{display:block;color:var(--text);font-size:24px;margin-bottom:4px}
 .import-choice{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.5;margin:20px 0}.import-choice input{width:18px;height:18px;flex:none;accent-color:#a678e8}
+
+.edit-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.control select{width:100%;padding:12px;background:#22212c;color:#fff;border:1px solid #494452;border-radius:10px;font:inherit}
