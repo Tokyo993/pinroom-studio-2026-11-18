@@ -58,7 +58,7 @@ function renderPin(pin){
 function slider(key,label,min,max,step=1){const value=editor.state[key];return `<div class="control"><label for="edit-${key}">${label}<output id="out-${key}">${value}</output></label><input type="range" id="edit-${key}" data-edit="${key}" min="${min}" max="${max}" step="${step}" value="${value}"></div>`;}
 function panel(){
   const state=editor.state;let contents='';
-  if(editTab==='crop')contents=`<div class="ratio-grid" aria-label="Формат кадра">${[['original','Свободно','free'],['1:1','1:1','square'],['4:5','4:5','portrait'],['16:9','16:9','wide'],['9:16','9:16','tall']].map(([v,label,shape])=>`<button data-action="ratio" data-value="${v}" class="${state.ratio===v?'active':''}" aria-pressed="${state.ratio===v}"><span class="ratio-shape ${shape}"></span><span>${label}</span></button>`).join('')}</div><div class="tool-row"><button data-action="rotate">${icon('rotate')} Повернуть <output>${state.rotation}°</output></button><button data-action="flip" aria-pressed="${state.flip}">${icon('flip')} Отразить</button></div><div class="control"><label for="edit-outputEdge">Разрешение · длинная сторона</label><select id="edit-outputEdge" data-edit="outputEdge">${[640,1080,1600].map(n=>`<option value="${n}" ${state.outputEdge===n?'selected':''}>До ${n} px</option>`).join('')}</select><p class="panel-note">Без увеличения исходника. Точный размер показан под изображением.</p></div>`;
+  if(editTab==='crop')contents=`<div class="ratio-grid" aria-label="Формат кадра">${[['original','Свободно','free'],['1:1','1:1','square'],['4:5','4:5','portrait'],['16:9','16:9','wide'],['9:16','9:16','tall']].map(([v,label,shape])=>`<button data-action="ratio" data-value="${v}" class="${state.ratio===v?'active':''}" aria-pressed="${state.ratio===v}"><span class="ratio-shape ${shape}"></span><span>${label}</span></button>`).join('')}</div><div class="tool-row"><button data-action="rotate">${icon('rotate')} Повернуть <output>${state.rotation}°</output></button><button data-action="flip" aria-pressed="${state.flip}">${icon('flip')} Отразить</button></div>`;
   if(editTab==='text')contents=`<div class="control"><label for="edit-text">Твои слова</label><textarea id="edit-text" data-edit="text" maxlength="120" placeholder="Добавь свою историю…">${esc(state.text)}</textarea></div>${slider('textSize','Размер текста',3,18)}${slider('textX','По горизонтали',0,100)}${slider('textY','По вертикали',0,100)}<div class="control"><label for="edit-textColor">Цвет текста</label><input type="color" id="edit-textColor" data-edit="textColor" value="${state.textColor}"></div>`;
   return `<div class="edit-tabs" aria-label="Инструменты">${[['crop','Кадр','crop'],['text','Текст','text']].map(([key,label,symbol])=>`<button data-action="edit-tab" data-value="${key}" class="${editTab===key?'active':''}" aria-pressed="${editTab===key}">${icon(symbol)}<span>${label}</span></button>`).join('')}</div><div class="panel-content">${contents}<button class="reset-btn" data-action="reset">Сбросить изменения</button></div>`;
 }
@@ -77,7 +77,7 @@ function loadImage(src){return new Promise((resolve,reject)=>{const img=new Imag
 function draw(override,canvas=$('#canvas')){
   if(!editor?.ready||!canvas)return;
   const state=sanitizeEdit(override||editor.state),img=editor.image;
-  const crop=cropRect(img.naturalWidth,img.naturalHeight,state),size=outputSize(crop.sw,crop.sh,state.rotation,state.outputEdge);
+  const crop=cropRect(img.naturalWidth,img.naturalHeight,state),size=outputSize(crop.sw,crop.sh,state.rotation);
   canvas.width=size.width;canvas.height=size.height;
   const ctx=canvas.getContext('2d');ctx.save();ctx.translate(size.width/2,size.height/2);ctx.rotate(state.rotation*Math.PI/180);if(state.flip)ctx.scale(-1,1);
   const w=state.rotation%180?size.height:size.width,h=state.rotation%180?size.width:size.height;
@@ -201,7 +201,7 @@ document.addEventListener('submit',async event=>{
     }catch(error){form.querySelector('.dialog-error').textContent=error.message;}finally{saveBusy=false;submit.disabled=false;}
   }
 });
-document.addEventListener('input',event=>{const key=event.target.dataset.edit;if(!key||!editor?.ready)return;const value=(event.target.type==='range'||key==='outputEdge')?Number(event.target.value):event.target.value;editor.state=sanitizeEdit({...editor.state,[key]:value});const output=$(`#out-${key}`);if(output)output.textContent=value;draw();});
+document.addEventListener('input',event=>{const key=event.target.dataset.edit;if(!key||!editor?.ready)return;const value=event.target.type==='range'?Number(event.target.value):event.target.value;editor.state=sanitizeEdit({...editor.state,[key]:value});const output=$(`#out-${key}`);if(output)output.textContent=value;draw();});
 document.addEventListener('change',event=>{if(event.target.dataset.edit&&editor?.ready){editor.history.push(editor.state);updateHistory();}if(event.target.id==='upload')upload(event.target.files[0]);});
 document.addEventListener('pointerdown',event=>{const button=event.target.closest('[data-action="compare-start"]');if(button&&editor?.ready){button.setPointerCapture(event.pointerId);draw(initialEdit());}});
 document.addEventListener('pointerup',()=>{if(editor?.ready)draw();});
